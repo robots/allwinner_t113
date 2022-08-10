@@ -22,6 +22,12 @@ USB OHCI Support is a bit hackish. I had to add cache invalidate/clear on some p
 
 LCD output is single buffered. Double buffer is written already, but not tested or enabled yet.
 
+### Documentation
+
+- https://github.com/mangopi-sbc/MQ.git
+- https://github.com/mangopi-sbc/aw-doc.git
+- https://github.com/Tina-Linux/d1s-melis.git
+
 
 ### License
 
