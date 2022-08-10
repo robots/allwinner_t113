@@ -1,6 +1,6 @@
 # Bla
 
-This is Freertos on Allwinner T113 chip. (chip because its not mcu more like SOC)
+This is Freertos on Allwinner T113 chip. (chip because it is not mcu, more like SOC)
 
 
 ## features of this project
