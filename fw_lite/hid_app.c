@@ -26,8 +26,16 @@
 #include "uart.h"
 #include "tusb.h"
 
-//#undef TU_LOG2
-//#define TU_LOG2 uart_printf
+/*
+KEYBOARD_MODIFIER_LEFTCTRL   = TU_BIT(0), ///< Left Control
+KEYBOARD_MODIFIER_LEFTSHIFT  = TU_BIT(1), ///< Left Shift
+KEYBOARD_MODIFIER_LEFTALT    = TU_BIT(2), ///< Left Alt
+KEYBOARD_MODIFIER_LEFTGUI    = TU_BIT(3), ///< Left Window
+KEYBOARD_MODIFIER_RIGHTCTRL  = TU_BIT(4), ///< Right Control
+KEYBOARD_MODIFIER_RIGHTSHIFT = TU_BIT(5), ///< Right Shift
+KEYBOARD_MODIFIER_RIGHTALT   = TU_BIT(6), ///< Right Alt
+KEYBOARD_MODIFIER_RIGHTGUI   = TU_BIT(7)  ///< Right Window
+*/
 
 //--------------------------------------------------------------------+
 // MACRO TYPEDEF CONSTANT ENUM DECLARATION
@@ -106,7 +114,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
   switch (itf_protocol)
   {
     case HID_ITF_PROTOCOL_KEYBOARD:
-//      TU_LOG2("HID receive boot keyboard report\r\n");
+      TU_LOG2("HID receive boot keyboard report\r\n");
       process_kbd_report( (hid_keyboard_report_t const*) report );
     break;
 
@@ -148,31 +156,50 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
   static hid_keyboard_report_t prev_report = { 0, 0, {0} }; // previous report to check key released
 
   //------------- example code ignore control (non-printable) key affects -------------//
-	/*
+
+	uart_printf("%02x ", report->modifier);
   for(uint8_t i=0; i<6; i++)
   {
     uart_printf("%02x ", report->keycode[i]);
 	}
 	uart_printf("\n");
-*/
-  for(uint8_t i=0; i<6; i++)
-  {
-    if ( report->keycode[i] )
-    {
-      if ( find_key_in_report(&prev_report, report->keycode[i]) )
-      {
+
+	uint8_t change = prev_report.modifier ^ report->modifier;
+	for(uint8_t i=0; i<8; i++) {
+		if (change & (1 << i)) {
+			if (report->modifier & (1 << i)) {
+				printf("modifier %d pressed\n", i);
+			} else {
+				printf("modifier %d pressed\n", i);
+			}
+		}
+	}
+
+  for(uint8_t i=0; i<6; i++) {
+    if (prev_report.keycode[i]) {
+      if (!find_key_in_report(report, prev_report.keycode[i]) ) {
+				// key released
+				printf("Keycode %02x released\n", prev_report.keycode[i]);
+			}
+		}
+	}
+
+  for(uint8_t i=0; i<6; i++) {
+    if (report->keycode[i]) {
+      if (find_key_in_report(&prev_report, report->keycode[i]) ) {
         // exist in previous report means the current key is holding
       }else
       {
+				
         // not existed in previous report means the current key is pressed
         bool const is_shift = report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT);
         uint8_t ch = keycode2ascii[report->keycode[i]][is_shift ? 1 : 0];
-        uart_printf("%c", ch);
+        /*uart_printf("%c", ch);
         if ( ch == '\r' ) uart_putchar('\n'); // added new line for enter key
-
+*/
+				printf("Keycode %02x pressed '%c'\n", report->keycode[i], ch);
       }
     }
-    // TODO example skips key released
   }
 
   prev_report = *report;
