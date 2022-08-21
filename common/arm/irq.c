@@ -1,3 +1,6 @@
+// GICv2 interrupt controller
+// most of the logic comes from CMSIS_5
+
 #include "platform.h"
 #include <string.h>
 
@@ -24,14 +27,14 @@ struct arm_regs_t {
 	uint32_t pc;
 };
 
-static void default_handler(uint32_t irq, void *arg);
+static void default_handler(void *arg);
 
 void irq_init(void)
 {
 	extern unsigned long _vector;
 //	uart_printf("irq: init\n\r");
-	__set_VBAR(&_vector);
-	__set_MVBAR(&_vector);
+	__set_VBAR((uint32_t)&_vector);
+	__set_MVBAR((uint32_t)&_vector);
 	__set_SCTLR(__get_SCTLR() & ~SCTLR_V_Msk);
   
 	// set default irq handler
@@ -97,7 +100,7 @@ void vApplicationIRQHandler( uint32_t ulICCIAR )
 	if(irq < ARRAY_SIZE(irq_table))
 	{
 		if (irq_table[irq].fnc) {
-			irq_table[irq].fnc(ulICCIAR, irq_table[irq].arg);
+			irq_table[irq].fnc(irq_table[irq].arg);
 		}
 	}
 }
@@ -119,14 +122,14 @@ void arm32_do_software_interrupt(struct arm_regs_t *regs)
 void arm32_do_prefetch_abort(struct arm_regs_t *regs)
 {
 	(void)regs;
-	uart_printf("irq: p abrt lr=%08x pc=%08x\n\r", regs->lr, regs->pc);
+	uart_printf("\n\r\n\rirq: p abrt lr=%08x pc=%08x\n\r", regs->lr, regs->pc);
 	while(1);
 }
 
 void arm32_do_data_abort(struct arm_regs_t *regs)
 {
 	(void)regs;
-	uart_printf("irq: d abrt lr=%08x pc=%08x\n\r", regs->lr, regs->pc);
+	uart_printf("\n\r\n\rirq: d abrt lr=%08x pc=%08x\n\r", regs->lr, regs->pc);
 	while(1);
 }
 
@@ -139,7 +142,7 @@ void arm32_do_irq(struct arm_regs_t *regs)
 	if(irq < ARRAY_SIZE(irq_table))
 	{
 		if (irq_table[irq].fnc) {
-			irq_table[irq].fnc(iar, irq_table[irq].arg);
+			irq_table[irq].fnc(irq_table[irq].arg);
 		}
 	}
 	GIC_EndInterrupt(iar);
@@ -154,15 +157,15 @@ void arm32_do_fiq(struct arm_regs_t *regs)
 	if(irq < ARRAY_SIZE(irq_table))
 	{
 		if (irq_table[irq].fnc) {
-			irq_table[irq].fnc(iar, irq_table[irq].arg);
+			irq_table[irq].fnc(irq_table[irq].arg);
 		}
 	}
 	GIC_EndInterrupt(iar);
 }
 
-void default_handler(uint32_t irq, void *arg)
+void default_handler(void *arg)
 {
 	(void)arg;
-	uart_printf("\r\nirq: unexpected irq %d\n\r", irq);
+	uart_printf("\r\nirq: unexpected irq \n\r");
 	while(1);
 }

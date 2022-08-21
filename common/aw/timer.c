@@ -1,3 +1,4 @@
+// timer for FreeRTOS using alwinner internal timer
 #include "platform.h"
 
 #include "ccu.h"

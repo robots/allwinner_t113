@@ -1,3 +1,5 @@
+// this is weird dependency of tusb ohci driver
+
 #ifndef CHIP_h_
 #define CHIP_h_
 

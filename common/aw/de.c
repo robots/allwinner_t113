@@ -1,5 +1,7 @@
 #include "platform.h"
 
+#include <stdio.h>
+
 #include "ccu.h"
 #include "uart.h"
 
@@ -158,7 +160,7 @@ void de_layer_set(void *fb0, void *fb1)
 	layers[0].fb_idx = 0;
 	layers[0].fb_dbl = fb1 != 0;
 
-	uart_printf("de: set layer, fmt = %d\n\r", layers[0].fmt);
+	printf("de: set layer, fmt = %ld\n\r", layers[0].fmt);
 	uint32_t w = layers[0].win.x1 - layers[0].win.x0;
 	uint32_t h = layers[0].win.y1 - layers[0].win.y0;
 	uint32_t p = fmt_to_pitch(layers[0].fmt);
@@ -171,7 +173,7 @@ void de_layer_set(void *fb0, void *fb1)
 
 	DE_MUX_OVL_UI1->SIZE = ((h-1) << 16) | (w-1);
 
-	uart_printf("de: commiting\n\r");
+	printf("de: commiting\n\r");
 	de_commit();
 }
 
@@ -212,7 +214,7 @@ void de_int_vblank(void)
 {
 	uint32_t changed = 0;
 
-	for (int i = 0; i < ARRAY_SIZE(layers); i++) {
+	for (unsigned int i = 0; i < ARRAY_SIZE(layers); i++) {
 		if (layers[i].fb_dbl == 0) continue;
 
 		if (layers[i].swap_pending) {

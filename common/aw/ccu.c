@@ -203,7 +203,7 @@ uint32_t ccu_video0_x4_to_clk(void)
 	uint32_t n = 1 + ((CCU->PLL_VIDEO0_CTRL_REG >> 8) & 0xff);
 	uint32_t m = 1 + ((CCU->PLL_VIDEO0_CTRL_REG >> 1) & 1);
 
-//	uart_printf("video0: n=%d m=%d ccu_clk_host24 = %d\n", n, m, ccu_clk_hosc24);
+//	uart_printf("video0: n=%d m=%d ccu_clk_hosc24 = %d\n", n, m, ccu_clk_hosc24);
 	return ccu_clk_hosc24 * n / m;
 }
 
@@ -258,6 +258,7 @@ void ccu_video1_pll_set(uint8_t n, uint8_t m)
 	//ccu_clk_video1_x4 = ccu_video1_x4_to_clk();
 }
 
+#if 0
 static void ccu_ve_pll_set(void)
 {
 	// default 432MHz
@@ -299,6 +300,7 @@ static void ccu_audio1_pll_set(void)
 		//CCU->PLL_AUDIO1_CTRL_REG &= ~BV(29); // lock disable
 	}
 }
+#endif
 
 static void ccu_clk_ahb_set(int hosc)
 {

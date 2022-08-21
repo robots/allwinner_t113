@@ -38,11 +38,6 @@
 		{ enum { ASSERT_CONCAT(assert_line_, __LINE__) = 1/(!!(e)) }; }
 #endif
 
-#define MAGIC_KEY  0xDEADBEEF
-
-//extern uint32_t SystemCoreClock;
-extern uint32_t SystemAPB1Clock;
-extern uint32_t SystemAPB2Clock;
 
 #endif
 

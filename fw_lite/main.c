@@ -1,5 +1,7 @@
 #include "platform.h"
 
+#include <stdio.h>
+
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -7,10 +9,13 @@
 #include "irq.h"
 #include "mmu.h"
 #include "ccu.h"
+#include "dmac.h"
 #include "tcon_lcd.h"
 #include "de.h"
 #include "arm_timer.h"
 #include "random.h"
+
+#include "syscalls.h"
 
 #include "memmgr.h"
 
@@ -20,20 +25,16 @@
 #include "usb_task.h"
 
 
-uint8_t ucHeap[ configTOTAL_HEAP_SIZE ];// __attribute__ ((aligned(4), section(".heapp")));
-
 #define STACK_SIZE 200
 TaskHandle_t task_blinky_handle;
 TaskHandle_t task_gr_handle;
-
-#define EHCI1_BASE (0x04200000)
 
 void task_blinky(void *arg)
 {
 	(void)arg;
 	uint32_t state = 1;
 
-	uart_printf("blinky\n");
+	printf("blinky\n");
 
 	while(1)
 	{
@@ -50,7 +51,7 @@ void do_lcd(void)
 	void *fb = dma_memalign(128, 800*480*4);
 	void *fb1 = dma_memalign(128, 800*480*4);
 
-	uart_printf("fb addr: %08x and %08x\n", fb, fb1);
+	printf("fb addr: %p and %p\n", fb, fb1);
 
 	gr_fill(fb, 0xff000000);
 	gr_fill(fb1, 0xff000000);
@@ -68,7 +69,7 @@ void do_lcd(void)
 	de_init();
 	de_layer_set(fb, fb1);
 }
-
+/*
 void gr_dump(void)
 {
 	uart_printf("ccu tconlcd\n");
@@ -76,7 +77,7 @@ void gr_dump(void)
 	uart_printf("ccu video0\n");
 	uart_dump_reg(0x2001040, 1);
 	uart_printf("tcon dump\n");
-	uart_dump_reg(TCON_LCD0, 0x100);
+	uart_dump_reg((uint32_t)TCON_LCD0, 0x100);
 	uart_printf("ccu dump\n");
 	uart_dump_reg(0x02001600, 4);
 	uart_printf("blender dump\n");
@@ -86,7 +87,7 @@ void gr_dump(void)
 	uart_printf("de glb\n");
 	uart_dump_reg(0x05100000, 16*4);
 }
-
+*/
 void print_clocks(void)
 {
 	uart_printf("CPU clk: %d\n", ccu_cpu_clk_get());
@@ -114,7 +115,9 @@ void task_gr(void *arg)
 	(void)arg;
 
 
-	uart_printf("gr\n");
+	printf("gr\n");
+
+	do_lcd();
 
 	uint32_t d = 0;
 	uint32_t t = 0;
@@ -156,6 +159,30 @@ void task_gr(void *arg)
 	vTaskDelete(NULL);
 }
 
+void task_init(void *arg)
+{
+	(void)arg;
+
+	//syscall init
+	syscalls_init();
+
+	BaseType_t ret = xTaskCreate(task_blinky, "led", STACK_SIZE, NULL, tskIDLE_PRIORITY+1, &task_blinky_handle);
+	if (ret != pdTRUE){
+		printf("not created\n");
+		while(1);
+	}
+	
+	ret = xTaskCreate(task_gr, "gr", 1000, NULL, tskIDLE_PRIORITY+2, &task_gr_handle);
+	if (ret != pdTRUE){
+		printf("not created\n");
+		while(1);
+	}
+
+	usb_task_init();
+
+	vTaskDelete(NULL);
+}
+
 
 int main()
 {
@@ -166,6 +193,7 @@ int main()
 	mmu_enable();
 
 	irq_init();
+	dmac_init();
 
 	ccu_init();
 	led_init();
@@ -175,21 +203,13 @@ int main()
 	print_clocks();
 
 	random_init(10);
-	do_lcd();
 
-	BaseType_t ret = xTaskCreate(task_blinky, "led", STACK_SIZE, NULL, tskIDLE_PRIORITY+1, &task_blinky_handle);
+	// now we switch to freertos
+	BaseType_t ret = xTaskCreate(task_init, "init", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY+2, NULL);
 	if (ret != pdTRUE){
 		uart_printf("not created\n");
 		while(1);
 	}
-	
-	ret = xTaskCreate(task_gr, "gr", 1000, NULL, tskIDLE_PRIORITY+2, &task_gr_handle);
-	if (ret != pdTRUE){
-		uart_printf("not created\n");
-		while(1);
-	}
-
-	usb_task_init();
 
 	uart_printf("starting scheduler\n");
 	vTaskStartScheduler();

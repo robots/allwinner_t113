@@ -1,5 +1,7 @@
 #include "platform.h"
 
+#include <stdio.h>
+
 #include "ccu.h"
 #include "gpio.h"
 #include "uart.h"
@@ -50,7 +52,7 @@ void tcon_find_clock(uint32_t tgt_freq)
 	uint32_t best_d = 6;
 	uint32_t best_err = 0xffffffff;
 
-	uart_printf("tcon: looking up pll parameters for %dHz\n", tgt_freq);
+	printf("tcon: looking up pll parameters for %ldHz\n", tgt_freq);
 	tgt_freq *=2;
 
 	for (uint32_t n = 12; n < 100; n ++) {
@@ -74,7 +76,7 @@ void tcon_find_clock(uint32_t tgt_freq)
 	}
 end:
 	
-	uart_printf("tcon: best: n=%d m=%d d=%d err=%d\n", best_n, best_m, best_d, best_err);
+	printf("tcon: best: n=%ld m=%ld d=%ld err=%ld\n", best_n, best_m, best_d, best_err);
 
 	ccu_video0_pll_set(best_n, best_m);
 	ccu_tcon_set_video0x4_div(1);
@@ -98,11 +100,10 @@ void tcon_dither(void)
 	TCON_LCD0->FRM_CTL_REG = BV(31);
 }
 
-static void tcon_int_handler(uint32_t iar, void *arg)
+static void tcon_int_handler(void *arg)
 {
-	(void)iar;
 	(void)arg;
-	uart_printf("tcon int\n");
+	printf("tcon int\n");
 
 	uint32_t gint0 = TCON_LCD0->GINT0_REG;
 
@@ -119,13 +120,13 @@ static void tcon_int_handler(uint32_t iar, void *arg)
 
 void tcon_lcd_init(void)
 {
-	uart_printf("tcon: init\n");
+	printf("tcon: init\n");
 	gpio_init(tcon_lcd_gpio, ARRAY_SIZE(tcon_lcd_gpio));
 
 	tcon_lcd_disable();
 
 	tcon_find_clock(timing.pixclk);
-	uart_printf("tcon_lcd: tcon clk = %dHz pixclk = %dHz\n", ccu_tcon_get_clk(), timing.pixclk);
+	printf("tcon_lcd: tcon clk = %ldHz pixclk = %ldHz\n", ccu_tcon_get_clk(), timing.pixclk);
 
 	// init iface
 	uint32_t val = timing.vt - timing.h - 8;
@@ -155,7 +156,7 @@ void tcon_lcd_init(void)
 	irq_set_enable(TCON_LCD_IRQn, 1);
 
 	//tcon_dither();
-	uart_printf("tcon: init done\n");
+	printf("tcon: init done\n");
 }
 
 void tcon_lcd_enable(void)

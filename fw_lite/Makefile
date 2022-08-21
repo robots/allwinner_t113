@@ -63,16 +63,31 @@ BSP = ../bsp/$(BOARD)
 # use file-extension c for "c-only"-files
 
 ## Application:
-SRC = main.c arm_timer.c
-SRC += ccu.c
-SRC += mmu.c
-SRC += gpio.c
-SRC += timer.c
-SRC += uart.c
+SRC = main.c syscalls.c
 SRC += led.c
-SRC += irq.c
-SRC += tcon_lcd.c de.c gr.c random.c
-SRC += memmgr.c hid_app.c usb_task.c
+SRC += hid_app.c usb_task.c
+SRC += sdfs.c diskio.c
+
+#SRC += ../common/arm/arm_timer.c
+SRC += ../common/arm/irq.c
+SRC += ../common/arm/mmu.c
+
+SRC += ../common/aw/ccu.c
+SRC += ../common/aw/gpio.c
+SRC += ../common/aw/tcon_lcd.c
+SRC += ../common/aw/de.c
+SRC += ../common/aw/uart.c
+SRC += ../common/aw/dmac.c
+SRC += ../common/aw/smhc.c
+SRC += ../common/aw/timer.c
+
+SRC += ../common/fifo.c
+SRC += ../common/gr.c
+SRC += ../common/random.c
+SRC += ../common/memmgr.c
+
+SRC += $(APPLIBDIR)/ff/ff.c
+SRC += $(APPLIBDIR)/ff/ffsystem.c
 
 SRC += $(APPLIBDIR)/tinyprintf/tinyprintf.c
 SRC += $(APPLIBDIR)/tlsf/tlsf.c
@@ -84,7 +99,7 @@ SRC += $(APPLIBDIR)/FreeRTOS-Kernel-main/queue.c
 SRC += $(APPLIBDIR)/FreeRTOS-Kernel-main/stream_buffer.c
 SRC += $(APPLIBDIR)/FreeRTOS-Kernel-main/tasks.c
 SRC += $(APPLIBDIR)/FreeRTOS-Kernel-main/timers.c
-SRC += $(APPLIBDIR)/FreeRTOS-Kernel-main/portable/MemMang/heap_4.c
+SRC += $(APPLIBDIR)/FreeRTOS-Kernel-main/portable/MemMang/heap_3.c
 SRC += $(APPLIBDIR)/FreeRTOS-Kernel-main/portable/GCC/ARM_CA9/port.c
 
 SRC += $(TINYUSB)/src/tusb.c
@@ -127,11 +142,13 @@ ASRCARM += $(APPLIBDIR)/FreeRTOS-Kernel-main/portable/GCC/ARM_CA9/portASM.S
 
 # List any extra directories to look for include files here.
 #    Each directory must be seperated by a space.
-EXTRAINCDIRS  = $(APPLIBDIR)/aw
+EXTRAINCDIRS  = ../common ../common/arm ../common/aw
+EXTRAINCDIRS += $(APPLIBDIR)/aw
 EXTRAINCDIRS += $(APPLIBDIR)/CMSIS_5/CMSIS/Core/Include
 EXTRAINCDIRS += $(APPLIBDIR)/CMSIS_5/CMSIS/Core_A/Include
 EXTRAINCDIRS += $(APPLIBDIR)/tinyprintf/
 EXTRAINCDIRS += $(APPLIBDIR)/tlsf/
+EXTRAINCDIRS += $(APPLIBDIR)/ff/
 EXTRAINCDIRS += $(APPLIBDIR)/FreeRTOS-Kernel-main/include
 EXTRAINCDIRS += $(APPLIBDIR)/FreeRTOS-Kernel-main/portable/GCC/ARM_CA9/
 

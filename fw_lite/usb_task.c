@@ -23,7 +23,7 @@ static void task_usb(void *arg)
 {
 	(void)arg;
 
-	uart_printf("task: usb\n");
+	printf("task: usb\n");
 
 	usb_hw_init();
 
@@ -35,9 +35,8 @@ static void task_usb(void *arg)
 	}
 }
 
-static void usb_int_handler(uint32_t iar, void *arg)
+static void usb_int_handler(void *arg)
 {
-	(void)iar;
 	(void)arg;
 
 	tuh_int_handler(0);
@@ -48,7 +47,7 @@ void usb_task_init(void)
 
 	BaseType_t ret = xTaskCreate(task_usb, "usb", 1000, NULL, tskIDLE_PRIORITY+2, &task_usb_handle);
 	if (ret != pdTRUE){
-		uart_printf("not created\n");
+		printf("not created\n");
 		while(1);
 	}
 }
@@ -114,11 +113,11 @@ uint8_t phy_read(uint32_t base, uint8_t addr, uint8_t len)
 
 void phy_print(uint32_t base)
 {
-	uart_printf("phybase = %p\n", base);
-	uart_printf("phy %02x = %x\n", 0x1c, phy_read(base, 0x1c, 0x03));
-	uart_printf("phy %02x = %x\n", 0x30, phy_read(base, 0x30, 0x0D));
-	uart_printf("phy %02x = %x\n", 0x60, phy_read(base, 0x60, 0x0E));
-	uart_printf("phy %02x = %x\n", 0x40, phy_read(base, 0x40, 0x08));
+	printf("phybase = %p\n", base);
+	printf("phy %02x = %x\n", 0x1c, phy_read(base, 0x1c, 0x03));
+	printf("phy %02x = %x\n", 0x30, phy_read(base, 0x30, 0x0D));
+	printf("phy %02x = %x\n", 0x60, phy_read(base, 0x60, 0x0E));
+	printf("phy %02x = %x\n", 0x40, phy_read(base, 0x40, 0x08));
 }
 */
 
@@ -140,10 +139,10 @@ static void usb_hw_init(void)
 	*phy_ctrl &= ~BV(3);
 	*usb_ctrl |= BV(10) | BV(9) | BV(8) | BV(0);
 
-	uart_printf("phy_ctl = %08x\n", *portsc);
+	printf("phy_ctl = %08lx\n", *portsc);
 	*portsc |= BV(13);
 
-	uart_printf("usb_ctl = %08x\n", *portsc);
+	printf("usb_ctl = %08lx\n", *portsc);
 
 /*
 	irq_set_handler(USB1_EHCI_IRQn, usb_int_handler, NULL);
