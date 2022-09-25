@@ -1,0 +1,2 @@
+export PATH=/home/robot/devel-twincar/andon/openocd-bin/bin:/home/robot/devel-twincar/andon/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH
+#export PATH=/home/robot/devel-twincar/andon/andon/openocd/bin:/home/robot/devel-twincar/andon/gcc-arm-none-eabi-4_8-2014q1/bin:$PATH
