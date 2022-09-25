@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "task.h"
 
 #include "led.h"
@@ -18,6 +19,7 @@
 #include "syscalls.h"
 
 #include "memmgr.h"
+#include "event.h"
 
 #include "gr.h"
 
@@ -28,6 +30,8 @@
 #define STACK_SIZE 200
 TaskHandle_t task_blinky_handle;
 TaskHandle_t task_gr_handle;
+
+QueueHandle_t kbd_queue;
 
 void task_blinky(void *arg)
 {
@@ -165,6 +169,8 @@ void task_init(void *arg)
 
 	//syscall init
 	syscalls_init();
+
+	kbd_queue = xQueueCreate(10, sizeof(kbd_event_t));
 
 	BaseType_t ret = xTaskCreate(task_blinky, "led", STACK_SIZE, NULL, tskIDLE_PRIORITY+1, &task_blinky_handle);
 	if (ret != pdTRUE){

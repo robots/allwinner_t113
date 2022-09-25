@@ -25,17 +25,8 @@
 
 #include "uart.h"
 #include "tusb.h"
+#include "event.h"
 
-/*
-KEYBOARD_MODIFIER_LEFTCTRL   = TU_BIT(0), ///< Left Control
-KEYBOARD_MODIFIER_LEFTSHIFT  = TU_BIT(1), ///< Left Shift
-KEYBOARD_MODIFIER_LEFTALT    = TU_BIT(2), ///< Left Alt
-KEYBOARD_MODIFIER_LEFTGUI    = TU_BIT(3), ///< Left Window
-KEYBOARD_MODIFIER_RIGHTCTRL  = TU_BIT(4), ///< Right Control
-KEYBOARD_MODIFIER_RIGHTSHIFT = TU_BIT(5), ///< Right Shift
-KEYBOARD_MODIFIER_RIGHTALT   = TU_BIT(6), ///< Right Alt
-KEYBOARD_MODIFIER_RIGHTGUI   = TU_BIT(7)  ///< Right Window
-*/
 
 //--------------------------------------------------------------------+
 // MACRO TYPEDEF CONSTANT ENUM DECLARATION
@@ -154,24 +145,35 @@ static inline bool find_key_in_report(hid_keyboard_report_t const *report, uint8
 static void process_kbd_report(hid_keyboard_report_t const *report)
 {
   static hid_keyboard_report_t prev_report = { 0, 0, {0} }; // previous report to check key released
+	kbd_event_t ev;
 
   //------------- example code ignore control (non-printable) key affects -------------//
 
+	/*
 	uart_printf("%02x ", report->modifier);
   for(uint8_t i=0; i<6; i++)
   {
     uart_printf("%02x ", report->keycode[i]);
 	}
 	uart_printf("\n");
+*/
+	uint8_t ch = prev_report.modifier ^ report->modifier;
 
-	uint8_t change = prev_report.modifier ^ report->modifier;
 	for(uint8_t i=0; i<8; i++) {
-		if (change & (1 << i)) {
+		if (ch & (1 << i)) {
+			ev.is_modifier = 1;
+			ev.ch = 0;
+			ev.code = i;
+
 			if (report->modifier & (1 << i)) {
-				printf("modifier %d pressed\n", i);
+				ev.down = 1;
+//				uart_printf("modifier %d pressed\n", i);
 			} else {
-				printf("modifier %d pressed\n", i);
+				ev.down = 0;
+//				uart_printf("modifier %d released\n", i);
 			}
+
+			xQueueSend(kbd_queue, &ev, 0);
 		}
 	}
 
@@ -179,7 +181,13 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
     if (prev_report.keycode[i]) {
       if (!find_key_in_report(report, prev_report.keycode[i]) ) {
 				// key released
-				printf("Keycode %02x released\n", prev_report.keycode[i]);
+				ev.is_modifier = 0;
+				ev.down = 0;
+				ev.code = prev_report.keycode[i];
+				ev.ch = 0;
+				xQueueSend(kbd_queue, &ev, 0);
+
+//				uart_printf("Keycode %02x released\n", prev_report.keycode[i]);
 			}
 		}
 	}
@@ -197,7 +205,13 @@ static void process_kbd_report(hid_keyboard_report_t const *report)
         /*uart_printf("%c", ch);
         if ( ch == '\r' ) uart_putchar('\n'); // added new line for enter key
 */
-				printf("Keycode %02x pressed '%c'\n", report->keycode[i], ch);
+				ev.is_modifier = 0;
+				ev.down = 1;
+				ev.code = report->keycode[i];
+				ev.ch = ch;
+				xQueueSend(kbd_queue, &ev, 0);
+
+//				uart_printf("Keycode %02x pressed '%c'\n", report->keycode[i], ch);
       }
     }
   }
