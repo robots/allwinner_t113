@@ -37,9 +37,13 @@ void task_doom(void *arg)
 	printf("doom task\n");
 
 	//printf("pll video0(x4): %d\n", ccu_video0_x4_clk_get());
+	uint32_t h = de_layer_get_h();
+	uint32_t w = de_layer_get_w();
 
-	void *fb = dma_memalign(128, 800*480*4);
-	void *fb1 = dma_memalign(128, 800*480*4);
+	uint32_t size = h * w * 4;
+
+	void *fb = dma_memalign(128, size);
+	void *fb1 = dma_memalign(128, size);
 
 	uart_printf("fb addr: %08x and %08x\n", fb, fb1);
 
@@ -50,8 +54,8 @@ void task_doom(void *arg)
 	gr_draw_pixel(fb, 101, 101, 0xffff0000);
 	gr_draw_pixel(fb, 101, 100, 0xffff0000);
 	gr_draw_pixel(fb, 100, 101, 0xffff0000);
-	gr_draw_line(fb, 0, 0, 800-1, 480-1, 0xff00ff00);
-	gr_draw_line(fb, 800-1, 0, 0, 480-1, 0xffff0000);
+	gr_draw_line(fb, 0, 0, w-1, h-1, 0xff00ff00);
+	gr_draw_line(fb, w-1, 0, 0, h-1, 0xffff0000);
 
 	tcon_lcd_init();
 	tcon_lcd_enable();
