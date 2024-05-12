@@ -1659,13 +1659,17 @@ typedef struct TCON_LCD_Type
 	uint32_t reserved10 [0x0014];
 	__IO uint32_t SAFE_PERIOD_REG;                   /*!< Offset 0x1F0 LCD Safe Period Register */
 	uint32_t reserved11 [0x000B];
-	__IO uint32_t LVDS0_ANA_REG;                     /*!< Offset 0x220 LCD LVDS Analog Register 0 */
-	__IO uint32_t LVDS1_ANA_REG;                     /*!< Offset 0x224 LCD LVDS Analog Register 1 */
+	__IO uint32_t LVDS_ANA_REG[2];                     /*!< Offset 0x220 LCD LVDS Analog Register 0/1 */
 	uint32_t reserved12 [0x0002];
 	__IO uint32_t SYNC_CTL_REG;                      /*!< Offset 0x230 LCD Sync Control Register */
 	__IO uint32_t SYNC_POS_REG;                      /*!< Offset 0x234 LCD Sync Position Register */
 	__IO uint32_t SLAVE_STOP_POS_REG;                /*!< Offset 0x238 LCD Slave Stop Position Register */
-	uint32_t reserved13 [0x0071];
+
+	__IO uint32_t LVDS1_ANA_REG[2];
+	__IO uint32_t LVDS1_IF_REG;
+
+	uint32_t reserved13 [0x006e];
+
 	__IO uint32_t GAMMA_TABLE_REG [0x100];           /*!< Offset 0x400 LCD Gamma Table Register */
 } TCON_LCD_TypeDef;
 /*

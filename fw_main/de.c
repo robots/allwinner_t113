@@ -74,8 +74,8 @@ struct layer_t layers[1] = {
 	},
 };
 
-uint32_t lcd_w = 800;
-uint32_t lcd_h = 480;
+uint32_t lcd_w = 1024;
+uint32_t lcd_h = 600;
 
 
 uint32_t fmt_to_pitch(uint8_t fmt)
