@@ -230,7 +230,7 @@ void I_FinishUpdate (void)
 	int xo, yo;
 	byte index;
 
-#define SCALE 2
+#define SCALE 1
 
 	uint32_t *fb = (uint32_t *)de_layer_get_fb();
 	uint32_t w = de_layer_get_w();
