@@ -5,12 +5,14 @@
 #include "de.h"
 #include "tcon_lcd.h"
 #include "gr.h"
-
+#include "led.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 
 #include "doom_task.h"
+
+extern void D_DoomMain (void);
 
 static void gr_dump(void)
 {
@@ -63,7 +65,8 @@ void task_doom(void *arg)
 	de_init();
 	de_layer_set(fb, fb1);
 
-extern void D_DoomMain (void);
+	//gr_dump();
+
 	D_DoomMain ();
 
 	vTaskDelete(NULL);
@@ -74,7 +77,7 @@ void doom_task_init(void)
 
 	BaseType_t ret = xTaskCreate(task_doom, "doom", 1000, NULL, tskIDLE_PRIORITY+2, NULL);
 	if (ret != pdTRUE){
-		printf("not created\n");
+		uart_printf("not created\n");
 		while(1);
 	}
 
