@@ -264,7 +264,7 @@ int _getpid ()
 
 static int con_init()
 {
-	uart_init_dma();	
+	uart_init_dma();
 
 	return 0;
 }
