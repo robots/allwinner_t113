@@ -8,6 +8,9 @@ void ccu_init(void);
 void ccu_de_set_peripx2_div(uint32_t div);
 void ccu_de_enable(void);
 
+void ccu_dsi_enable(void);
+void ccu_lvds_enable(void);
+
 void ccu_tcon_set_video0x4_div(uint32_t div);
 void ccu_tcon_lcd_enable(void);
 uint32_t ccu_tcon_get_clk(void);

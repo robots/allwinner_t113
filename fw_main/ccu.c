@@ -39,6 +39,19 @@ void ccu_tcon_set_video0x4_div(uint32_t div)
 	CCU->TCONLCD_CLK_REG |= BV(31);
 }
 
+void ccu_dsi_enable(void)
+{
+	CCU->DSI_CLK_REG = (1 << 24) | (0 << 8) | (0);
+	CCU->DSI_CLK_REG |= BV(31);
+	CCU->DSI_BGR_REG |= BV(16);
+	CCU->DSI_BGR_REG |= BV(0);
+}
+
+void ccu_lvds_enable(void)
+{
+	CCU->LVDS_BGR_REG |= BV(16);
+}
+
 void ccu_tcon_lcd_enable(void)
 {
 	CCU->TCONLCD_BGR_REG |= BV(16);
@@ -84,6 +97,12 @@ void ccu_uart_enable(UART_TypeDef *uart)
 
 		// release from reset
 		CCU->UART_BGR_REG |= BV(16);
+	} else if (uart == UART1) {
+		// enable clock 
+		CCU->UART_BGR_REG |= BV(1);
+
+		// release from reset
+		CCU->UART_BGR_REG |= BV(17);
 	}
 }
 
