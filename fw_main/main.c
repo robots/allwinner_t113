@@ -97,6 +97,7 @@ static void task_init(void *arg)
 
 int main()
 {
+	uart_init(115200);
 //	*(uint32_t *)0x02500000 = '%';
 	uart_printf("\n\nhello from allwinner\n");
 

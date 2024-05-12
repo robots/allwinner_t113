@@ -46,14 +46,14 @@ SemaphoreHandle_t uart_mutex;
 struct gpio_t uart_gpio[] = {
 	{
 		.gpio = GPIOE,
-		.pin = BV(2),
-		.mode = GPIO_MODE_FNC6,
+		.pin = BV(10),
+		.mode = GPIO_MODE_FNC3,
 		.drv = GPIO_DRV_0,
 	},
 	{
 		.gpio = GPIOE,
-		.pin = BV(3),
-		.mode = GPIO_MODE_FNC6,
+		.pin = BV(11),
+		.mode = GPIO_MODE_FNC3,
 		.drv = GPIO_DRV_0,
 	},
 };
@@ -64,38 +64,38 @@ void uart_init(uint32_t baudrate)
 {
 	gpio_init(uart_gpio, ARRAY_SIZE(uart_gpio));
 
-	ccu_uart_enable(UART0);
+	ccu_uart_enable(UART1);
 
 	// calculare baudrate divisor
 	uint32_t clk = ccu_apb1_clk_get();
 
 	uint32_t br = clk/16/baudrate;
 
-	UART0->DLH_IER = 0x0;
-	UART0->IIR_FCR = 0xf7;
-	UART0->UART_MCR = 0x0;
+	UART1->DLH_IER = 0x0;
+	UART1->IIR_FCR = 0xf7;
+	UART1->UART_MCR = 0x0;
 
 	// enable access to DLL DLH
-	UART0->UART_LCR |= (1 << 7);
+	UART1->UART_LCR |= (1 << 7);
 
 	// configure baudrate prescaler
-	UART0->DATA = br & 0xff;
-	UART0->DLH_IER = (br >> 8) & 0xff;
+	UART1->DATA = br & 0xff;
+	UART1->DLH_IER = (br >> 8) & 0xff;
 
 	// disable access to DLL DLH
-	UART0->UART_LCR &= ~(1 << 7);
+	UART1->UART_LCR &= ~(1 << 7);
 
 	// configure line config 8,n,1
-	UART0->UART_LCR &= ~0x1f;
-	UART0->UART_LCR |= (0x3 << 0) | (0 << 2) | (0x0 << 3);
+	UART1->UART_LCR &= ~0x1f;
+	UART1->UART_LCR |= (0x3 << 0) | (0 << 2) | (0x0 << 3);
 }
 
 void uart_init_dma(void)
 {
 	fifo_init(&uart_tx_fifo, uart_tx_buf, sizeof(uint8_t), UART_TX_BUF);
 
-	uart_dmac_desc.config = BV(24) | (DMAC_DstReqUART0_TX << 16) | (DMAC_SrcReqDRAM); // DRAM source, UART0 TX dst, dst in IOmode, 8bit, no burst, 1byte block
-	uart_dmac_desc.dst_addr = (void *)&UART0->DATA;
+	uart_dmac_desc.config = BV(24) | (DMAC_DstReqUART1_TX << 16) | (DMAC_SrcReqDRAM); // DRAM source, UART1 TX dst, dst in IOmode, 8bit, no burst, 1byte block
+	uart_dmac_desc.dst_addr = (void *)&UART1->DATA;
 	uart_dmac_desc.parameter = 0;
 	uart_dmac_desc.next = DMAC_NO_LINK;
 
@@ -106,13 +106,13 @@ void uart_init_dma(void)
 	}
 
 	// wait for busy
-	while ((UART0->UART_USR & 2) == 0);
+	while ((UART1->UART_USR & 2) == 0);
 
 	dmac_set_handler(UART_DMAC_CH, uart_dmac_handler, NULL);
 	dmac_enable_irq(UART_DMAC_CH, BV(2)); // pkg end irq
 
 	// enable TX dma
-	UART0->UART_DMA_REQ_EN |= BV(1);
+	UART1->UART_DMA_REQ_EN |= BV(1);
 
 	uart_dma_mode = 1;
 }
@@ -193,9 +193,9 @@ static void uart_send_dma(const char *buf, size_t count)
 
 static void uart_putchar(char c)
 {
-	while ((UART0->UART_USR & 2) == 0);
-	UART0->DATA = c;
-	while ((UART0->UART_USR & 2) == 0);
+	while ((UART1->UART_USR & 2) == 0);
+	UART1->DATA = c;
+	while ((UART1->UART_USR & 2) == 0);
 }
 
 
