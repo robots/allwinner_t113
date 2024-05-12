@@ -72,7 +72,7 @@ SRC += timer.c
 SRC += uart.c
 SRC += led.c
 SRC += irq.c dmac.c
-SRC += tcon_lcd.c de.c gr.c random.c
+SRC += tcon_lcd-lvds.c de.c de_scaler_table.c gr.c random.c
 SRC += memmgr.c hid_app.c usb_task.c doom_task.c
 
 SRC += fifo.c

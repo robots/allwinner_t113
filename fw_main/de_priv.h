@@ -3,6 +3,18 @@
 
 #include "platform.h"
 
+#define N2_POWER(a, power)      (((unsigned long long)a)<<power)
+
+/* GSU configuration */
+#define GSU_PHASE_NUM            16
+/* bit19 to bit2 is fraction part */
+#define GSU_PHASE_FRAC_BITWIDTH  18
+/* bit19 to bit2 is fraction part, and bit1 to bit0 is void */
+#define GSU_PHASE_FRAC_REG_SHIFT 2
+/* frame buffer information fraction part bit width */
+#define GSU_FB_FRAC_BITWIDTH     32
+
+
 typedef struct {
 	__IO uint32_t SCLK_GATE;
 	__IO uint32_t HCLK_GATE;
@@ -92,8 +104,24 @@ typedef struct {
 } DE_MUX_OVL_UI_TypeDef;
 
 typedef struct {
-	__IO uint32_t EN;
-	// TODO: much more
+	__IO uint32_t CTRL_REG;
+	__IO uint32_t res0;
+	__IO uint32_t STATUS_REG;
+	__IO uint32_t FIELD_CTRL_REG;
+	__IO uint32_t BIST_REG;
+	__IO uint32_t res1[11];
+	__IO uint32_t OUTSIZE_REG;
+	__IO uint32_t res2[15];
+	__IO uint32_t INSIZE_REG;
+	__IO uint32_t res3;
+	__IO uint32_t HSTEP_REG;
+	__IO uint32_t VSTEP_REG;
+	__IO uint32_t HPHASE_REG;
+	__IO uint32_t res4;
+	__IO uint32_t VPHASE0_REG;
+	__IO uint32_t VPHASE1_REG;
+	__IO uint32_t res5[88];
+	__IO uint32_t HCOEF_REG[16];
 } DE_GSU_TypeDef;
 
 // adaptive saturation enhancement

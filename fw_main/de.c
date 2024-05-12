@@ -6,6 +6,8 @@
 #include "de.h"
 #include "de_priv.h"
 
+#include "de_scaler_table.h"
+
 #include "FreeRTOS.h"
 #include "semphr.h"
 
@@ -58,16 +60,16 @@ uint8_t fmtpitch[] = {
 
 struct layer_t layers[1] = {
 	{
-		.w = 800,
-		.h = 480,
+		.w = 320,
+		.h = 200,
 		.fmt = LAY_FBFMT_ARGB_8888,
 		.alpha = 0xff,
 
 		.win = {
 			.x0 = 0,
 			.y0 = 0,
-			.x1 = 800,
-			.y1 = 480,
+			.x1 = 320,
+			.y1 = 200,
 		},
 	},
 };
@@ -109,9 +111,9 @@ void de_init(void)
 
 	// put all processing on bypass
 	DE_MUX_VSU->CTRL_REG = 0;
-	DE_MUX_GSU1->EN = 0;
-	DE_MUX_GSU2->EN = 0;
-	DE_MUX_GSU3->EN = 0;
+	DE_MUX_GSU1->CTRL_REG = 0;
+	DE_MUX_GSU2->CTRL_REG = 0;
+	DE_MUX_GSU3->CTRL_REG = 0;
 	DE_MUX_FCE->GCTRL_REG = 0;
 	DE_MUX_BWS->GCTRL_REG = 0;
 	DE_MUX_LTI->EN = 0;
@@ -170,6 +172,70 @@ void de_layer_set(void *fb0, void *fb1)
 	DE_MUX_OVL_UI1->LAYER[0].TOP_LADD = (uint32_t)layers[0].fb[0];
 
 	DE_MUX_OVL_UI1->SIZE = ((h-1) << 16) | (w-1);
+
+#if 1
+	if  ((w < lcd_w) || (h < lcd_h)) {
+		uint64_t tmp = 0;
+		uint64_t vstep = 0;
+
+		// enable GSU (scaler unit)
+		uart_printf("de: enable scaler\n\r");
+
+		// set input resolution and output resolution
+		DE_MUX_GSU1->OUTSIZE_REG = ((lcd_h-1) << 16) | (lcd_w - 1);
+		DE_MUX_GSU1->INSIZE_REG = ((h-1) << 16) | (w - 1);
+
+		// calculate fractional hstep
+		tmp = w << GSU_PHASE_FRAC_BITWIDTH;
+		tmp = tmp / lcd_w;
+
+		DE_MUX_GSU1->HSTEP_REG = tmp << GSU_PHASE_FRAC_REG_SHIFT;
+//		uart_printf("de: hstep = %08x\n\r", DE_MUX_GSU1->HSTEP_REG);
+
+		// calculate fractional vstep
+		vstep = h << GSU_PHASE_FRAC_BITWIDTH;
+		vstep = vstep / lcd_h;
+
+		DE_MUX_GSU1->VSTEP_REG = vstep << GSU_PHASE_FRAC_REG_SHIFT;
+//		uart_printf("de: vstep = %08x\n\r", DE_MUX_GSU1->VSTEP_REG);
+
+		// calculate hphase (its always zero for our purpose)
+		tmp = (0 & 0xFFFFFFFF) >> (32 - GSU_PHASE_FRAC_BITWIDTH);
+		DE_MUX_GSU1->HPHASE_REG = tmp << GSU_PHASE_FRAC_REG_SHIFT;
+//		uart_printf("de: hphase = %08x\n\r", DE_MUX_GSU1->HPHASE_REG);
+
+		// calculate vphase (its always zero for our purpose)
+		tmp = (0 & 0xFFFFFFFF) >> (32 - GSU_PHASE_FRAC_BITWIDTH);
+		DE_MUX_GSU1->VPHASE0_REG = tmp << GSU_PHASE_FRAC_REG_SHIFT;
+//		uart_printf("de: vphase = %08x\n\r", DE_MUX_GSU1->VPHASE0_REG);
+
+		uint32_t pt_coef = 0;
+		
+		{
+			uint32_t scale_ratio, int_part, float_part, fir_coef_ofst;
+			scale_ratio = vstep >> (GSU_PHASE_FRAC_BITWIDTH - 3);
+			int_part = scale_ratio >> 3;
+			float_part = scale_ratio & 0x7;
+			fir_coef_ofst = (int_part == 0) ? GSU_ZOOM0_SIZE :
+					(int_part == 1) ? GSU_ZOOM0_SIZE + float_part :
+					(int_part == 2) ? GSU_ZOOM0_SIZE + GSU_ZOOM1_SIZE + (float_part >> 1) :
+					(int_part == 3) ? GSU_ZOOM0_SIZE + GSU_ZOOM1_SIZE	+ GSU_ZOOM2_SIZE :
+					(int_part == 4) ? GSU_ZOOM0_SIZE + GSU_ZOOM1_SIZE	+ GSU_ZOOM2_SIZE + GSU_ZOOM3_SIZE :
+					GSU_ZOOM0_SIZE + GSU_ZOOM1_SIZE + GSU_ZOOM2_SIZE	+ GSU_ZOOM3_SIZE + GSU_ZOOM4_SIZE;
+
+			pt_coef = fir_coef_ofst * GSU_PHASE_NUM;
+		}
+
+//		uart_printf("de: pt_coef = %d\n\r", pt_coef);
+
+		// copy fir table
+		for (size_t i = 0; i < GSU_PHASE_NUM; i++) {
+			DE_MUX_GSU1->HCOEF_REG[i] = lan2coefftab16[pt_coef + i];
+		}
+
+		DE_MUX_GSU1->CTRL_REG = 1 | 0x10;
+	}
+#endif
 
 	uart_printf("de: commiting\n\r");
 	de_commit();
